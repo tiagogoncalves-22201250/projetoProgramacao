@@ -7,17 +7,84 @@ fun leFicheiro(numLines: Int, numColumns: Int): List<String>
 }
 
 //========================================= 1ª Parte =================================================================
-//===========================================Main ==================================================================
+//=========================================== Main ===================================================================
 
+fun main()
+{
+    do
+    {
+        var sairJogo = false
+        var linha: Int = -1
+        var coluna: Int = -1
+        var data: String?
+        var opcao: Int?
+        var validaTerreno: Boolean
+        var validacaoData: String? = null
+        do
+        {
+            validaTerreno = true
+            opcao = pedirInteiro()
+            if (opcao == 1)
+            {
+                data = ""
+                validacaoData = null
+                linha = inputLinhasOuColunas("linhas")
+                coluna = inputLinhasOuColunas("colunas")
+                validaTerreno = validaTamanhoMapa(linha, coluna)
+                if (linha == 10 && coluna == 10)
+                {
+                    do
+                    {
+                        data = pedirDataNascimento()
+                        validacaoData = validaDataNascimento(data)
+                    } while (validacaoData == "Data invalida")
+                }
+            }
+        } while (!validaOpcao(opcao) || !validaTerreno || validacaoData == "Menor de idade nao pode jogar")
+        println("")
+        if (opcao == 1)
+        {
+            var coordenada: String
+            var coordenadaPair: Pair<Int, Int>?
+            val contadoresVerticais = leContadoresDoFicheiro(linha, coluna, true)
+            val contadoresHorizontais = leContadoresDoFicheiro(linha, coluna, false)
+            val terreno = leTerrenoDoFicheiro(linha, coluna)
+            println(criaTerreno(terreno, contadoresVerticais, contadoresHorizontais))
+            do
+            {
+                do
+                {
+                    coordenada = pedirCoordenadas()
+                    coordenadaPair = processaCoordenadas(coordenada, linha, coluna)
+                } while (coordenadaPair == null)
+                if (!(coordenadaPair.first == -2003 && coordenadaPair.second == -1998))
+                {
+                    if (!colocaTenda(terreno, coordenadaPair))
+                    {
+                        textoCoordenadasInvalidas(true)
+                    }
+                    else
+                    {
+                        println("\n"+ criaTerreno(terreno, contadoresVerticais, contadoresHorizontais))
+                    }
+                }
+                else
+                {
+                    sairJogo = true
+                }
+            } while (!terminouJogo(terreno, contadoresVerticais, contadoresHorizontais) && !sairJogo)
+        }
+    } while (opcao != 0 && !sairJogo)
+}
 
 //========================================= Menu - 100% ===============================================================
-//Função Obrigatoria - Gere a parte do Menu.
+//Função Obrigatoria - Gere o output da parte do Menu
 fun criaMenu() : String
 {
     return "\nBem vindo ao jogo das tendas\n\n1 - Novo jogo\n0 - Sair\n"
 }
 
-//Função Opcional- Le os Caracteres introduzidos pelo utilizador.
+//Função Opcional- Le a opção introduzida pelo utilizador.
 fun pedirInteiro(): Int?
 {
     println(criaMenu())
@@ -27,17 +94,17 @@ fun pedirInteiro(): Int?
 //Função Opcional - Valida se o input do pedirInteiro é valida ou não.
 fun validaOpcao(opcao: Int?) : Boolean
 {
-    if(opcao == null || opcao < 0 || opcao > 1)
+    if(opcao != null || opcao == 0 || opcao == 1)
     {
-        println("Opcao invalida")
-        return false
+        return true
     }
-    return true
+    println("Opcao invalida")
+    return false
 }
 
 //======================== Valida as linhas e colunas - 100% =======================================
 
-//Função Opcional - Valida se o input esta correto
+//Função Opcional - Valida se a linha e a coluna esta correta
 fun validoNumero (numero: Int?): Boolean
 {
     if (numero == null || numero < 0 || numero > 10)
@@ -71,7 +138,6 @@ fun inputLinhasOuColunas(texto: String): Int
 }
 
 //===========Valida se o terreno é valido(ou seja, se as linhas e as colunas correspondem a algum tamanho) valido ======
-
 //Função Opcional - Retoma "Terreno invalido"
 fun terrenoInvalido()
 {
@@ -170,6 +236,7 @@ fun validaAno(ano: Int): Boolean
     return true
 }
 
+//Função Opcional - Texto do menor de idade
 fun textoMenorIdade(imprime: Boolean = false): String
 {
     val texto = "Menor de idade nao pode jogar"
@@ -249,7 +316,7 @@ fun letrasLegenda():String
     return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 }
 
-//=========================Cria uma string que exibe as coordenadas das colunas do terreno==============================
+//=========================Cria a legenda Horizontal e o cria legenda vertical ==============================
 
 fun criaLegendaHorizontal(numColunas: Int): String
 {
@@ -270,57 +337,18 @@ fun criaLegendaVertical(mostrarLegenda: Boolean = true, numDaColuna: Int): Strin
 {
     if (mostrarLegenda){
         if (numDaColuna > 9) {
-            return "${numDaColuna} |"
+            return "${numDaColuna}"
         } else {
-            return " ${numDaColuna} |"
+            return " ${numDaColuna}"
         }
     } else {
-        return ""
+        return "  "
     }
 }
-
-/*======================================Terreno total=============================================*/
-
-fun criaLinhasTerreno(numColunas: Int): String
-{
-    var coluna = 0
-    var legenda = ""
-    while (coluna < numColunas)
-    {
-        if (coluna == numColunas - 1)
-        {
-            legenda += " \u25B3"
-        }
-        else
-        {
-            legenda += "   |"
-        }
-        coluna ++
-    }
-    return legenda
-}
-
-fun mostraLegendaVertical(tamanho: Boolean = true): Boolean
-{
-    if (tamanho)
-    {
-        return true
-    }
-    return false
-}
-
-fun mostraLegendaHorizontal(tamanho: Boolean = true): Boolean
-{
-    if (tamanho)
-    {
-        return true
-    }
-    return false
-}
-
 //===================================== 2ª Parte =============================================================
+//===================================Contadores das Colunas e Linhas =================================
 
-//Done
+//Função Obrigatoria - Le no ficheiro os contadores das colunas
 fun leContadoresColunas(numColumns: Int, ficheiro: List<String>) : Array<Int?>
 {
     val valor : Array<Int?> = arrayOfNulls(numColumns)
@@ -343,7 +371,7 @@ fun leContadoresColunas(numColumns: Int, ficheiro: List<String>) : Array<Int?>
     return valor
 }
 
-//Done
+//Função Obrigatoria - Lê o contador das linhas do ficheiro
 fun leContadoresLinhas(numLines: Int, ficheiro: List<String>) : Array<Int?>
 {
     val valor : Array<Int?> = arrayOfNulls(numLines)
@@ -366,7 +394,7 @@ fun leContadoresLinhas(numLines: Int, ficheiro: List<String>) : Array<Int?>
     return valor
 }
 
-//Done
+//Função Obrigatoria - Gere se quero ler as linhas ou colunas do ficheiro
 fun leContadoresDoFicheiro(numLines: Int, numColumns: Int, verticais: Boolean): Array<Int?>
 {
     val ficheiro = leFicheiro(numLines,numColumns)
@@ -380,194 +408,127 @@ fun leContadoresDoFicheiro(numLines: Int, numColumns: Int, verticais: Boolean): 
     }
 }
 
-//Done
-fun criaLegendaContadoresHorizontal(contadoresVerticais: Array<Int?>): String
-{
-    var texto = ""
-    for(i in contadoresVerticais.indices)
-    {
-        if(contadoresVerticais[i] == null)
-        {
-            texto += ("    ")
-        }
-        else if(contadoresVerticais[i] == 0)
-        {
-            texto += ("    ")
-        }
-        else if(i == contadoresVerticais.size - 1)
-        {
-            texto += ("${contadoresVerticais[i]}")
-        }
-        else
-        {
-            texto += ("${contadoresVerticais[i]}   ")
-        }
-    }
-    return texto
-}
-
-//Done
-fun criaLegendaContadoresVertical(contadoresVertical: Array<Int?>): String
-{
-    var texto = ""
-    for(i in contadoresVertical.indices)
-    {
-        if(contadoresVertical[i] == null)
-        {
-            texto += ("    ")
-        }
-        else if(contadoresVertical[i] == 0)
-        {
-            texto += ("    ")
-        }
-        else if(i == contadoresVertical.size - 1)
-        {
-            texto += ("${contadoresVertical[i]}")
-        }
-        else
-        {
-            texto += ("${contadoresVertical[i]}   ")
-        }
-    }
-    return texto
-}
-
-// Done
+//=================================Terreno do Ficheiro ================================================
+//Função Obrigatoria - Lê as coordenadas das Arvores do ficheiro e processa o terreno
 fun leTerrenoDoFicheiro(numLines: Int, numColumns: Int): Array<Array<String?>>
 {
     val ficheiro = leFicheiro(numLines,numColumns)
     val terreno: Array<Array<String?>> = Array(numLines) { Array(numColumns) { null }}
     for (linha in 2 until ficheiro.size)
     {
-         for (coluna in 0 until numColumns)
-         {
-             val separacao = ficheiro[linha].split(",")
-             val aLinha = separacao[0].toInt()
-             val aColuna = separacao[1].toInt()
-             terreno[aLinha][aColuna] = "A"
-         }
+        for (coluna in 0 until numColumns)
+        {
+            val separacao = ficheiro[linha].split(",")
+            val aLinha = separacao[0].toInt()
+            val aColuna = separacao[1].toInt()
+            terreno[aLinha][aColuna] = "A"
+        }
     }
     return terreno
 }
 
-fun transformarArrayIntEmString(terreno: Array<Array<String?>>, verticais: Boolean) : String
+//=========================Coordenadas inseridas =====================================================
+
+//Função Opcional - Valida se o tamanho das coordenadas é valido ou não(por causa da virgula)
+fun validarTamanhoCoordenadas(coordenadasStr: String, numLines: Int, numColumns: Int): Boolean
 {
-    val valores : Array<Int?> = leContadoresDoFicheiro(terreno.size, terreno[0].size,verticais)
-    var texto = ""
-    for(i in 0 until valores.size)
+    val listaSeparada = coordenadasStr.split(",")
+    if(listaSeparada.size != 2)
     {
-        texto += "   ${valores[i]}"
+        return false
     }
-    return texto
+    val coordLinha = listaSeparada[0].toInt()
+    val coordColuna = converteLetraNumero(listaSeparada[1])
+    if(coordLinha > numLines || coordLinha < 1)
+    {
+        return false
+    }
+    if(coordColuna >= numColumns || coordColuna < 0)
+    {
+        return false
+    }
+    return true
 }
 
-fun tradutorTerreno(terreno: Array<Array<String?>>, numLines: Int, numColumns: Int): String?
+//Função Opcional - Texto do input das coordenadas
+fun textoCoordenadas(): String
 {
-    var texto = ""
-    if(terreno[numLines][numColumns] == "A")
-    {
-        texto += "\u25B3  |"
-    }
-    if(terreno[numLines][numColumns] == "T")
-    {
-        texto += "T |"
-    }
-    if(terreno[numLines][numColumns] == null)
-    {
-        texto += "   |"
-    }
-    return texto
+    return "Coordenadas da tenda? (ex: 1,B)"
 }
 
-fun criaTerreno(terreno: Array<Array<String?>>,
-                contadoresVerticais: Array<Int?>?,
-                contadoresHorizontais: Array<Int?>?,
-                mostraLegendaHorizontal: Boolean = false,
-                mostraLegendaVertical: Boolean = false): String
+/*Função Opcional - Texto se as coordenadas estiverem invalidas
+Ou se não for possivel colocar tenda naquelas coordenadas
+ */
+fun textoCoordenadasInvalidas(imprime: Boolean): String
 {
-    val numColunas = terreno[0].size
-    val numLinhas = terreno.size
-    var terrenoFinal = ""
-
-    if (contadoresHorizontais != null) {
-        terrenoFinal += ("     ${transformarArrayIntEmString(terreno,true)}\n")
-    }
-    if (mostraLegendaHorizontal) {
-        terrenoFinal += ("      | ${criaLegendaHorizontal(numColunas)}\n")
-    }
-    for (i in 0 until numLinhas - 1)
+    if(imprime)
     {
-        if (contadoresVerticais != null)
-        {
-            terrenoFinal += "  ${criaLegendaVertical(true, i + 1)}"
-        }
-        for (j in 0 until numColunas)
-        {
-            terrenoFinal += "  ${tradutorTerreno(terreno, i, j)}"
-        }
-        terrenoFinal += "\n"
+        println("Tenda nao pode ser colocada nestas coordenadas")
     }
-    return terrenoFinal
+    return "Tenda nao pode ser colocada nestas coordenadas"
+}
+
+//Função Opcional - Pede ao utilizador as coordenadas
+fun pedirCoordenadas(): String
+{
+    println(textoCoordenadas())
+    return readln()
+}
+
+//Função Obrigatoria - Verifica se a coordenada esta de acordo com as normas do jogo
+fun processaCoordenadas(coordenadasStr: String?, numLines: Int, numColumns: Int): Pair<Int, Int>?
+{
+    if (coordenadasStr.equals("sair"))
+    {
+        return Pair(-2003,-1998)
+    }
+    if (coordenadasStr != null && coordenadasStr.length > 2)
+    {
+        val listaSeparada = coordenadasStr.split(",")
+        if(listaSeparada.size != 2)
+        {
+            textoCoordenadasInvalidas(true)
+            return null
+        }
+        val coordLinha = listaSeparada[0].toInt()
+        val coordColuna = converteLetraNumero(listaSeparada[1])
+        if(coordLinha > numLines || coordLinha < 1)
+        {
+            textoCoordenadasInvalidas(true)
+            return null
+        }
+        if(coordColuna >= numColumns || coordColuna < 0)
+        {
+            textoCoordenadasInvalidas(true)
+            return null
+        }
+        return Pair(coordLinha-1,coordColuna)
+    }
+    textoCoordenadasInvalidas(true)
+    return null
 }
 
 //Done
 fun letrasValidas(): Array<String>
 {
-        return arrayOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+    return arrayOf("A", "B", "C", "D", "E", "F", "G", "H", "I", "J")
+}
+
+//Função Opcional - Retorna o número correspondente a letra inserida
+fun converteLetraNumero(letra: String): Int
+{
+    var numero: Int = -1
+    for (i in 0 until letrasValidas().size)
+    {
+        if (letra == letrasValidas()[i])
+        {
+            numero = i
+        }
     }
-
-//Done
-fun converteLetraNumero(coordenadasStr: String): Int
-{
-        val listaSeparada = coordenadasStr.split(",")
-        val coluna = listaSeparada[1]
-        var numero: Int = -1
-        for (i in 0 until letrasValidas().size) {
-            if (coluna == letrasValidas()[i]) {
-                numero = i
-            }
-        }
-        return numero
-    }
-
-//Done
-fun textoCoordenadasInvalidas(): String
-{
-        return "Coordenadas invalidas"
+    return numero
 }
 
-//Done
-fun validarTamanhoCoordenadas(coordenadasStr: String, numLines: Int, numColumns: Int): Boolean
-{
-        val listaSeparada = coordenadasStr.split(",")
-        if (listaSeparada[0].toInt() <= numLines && converteLetraNumero(coordenadasStr) <= numColumns)
-        {
-            return true
-        }
-        return false
-}
-
-//Done
-fun processaCoordenadas(coordenadasStr: String?, numLines: Int, numColumns: Int): Pair<Int, Int>?
-{
-        val coordenadas: Pair<Int, Int>?
-        val listaSeparada = coordenadasStr?.split(",")
-        if (coordenadasStr != null && coordenadasStr.length > 2)
-        {
-            if (validarTamanhoCoordenadas(coordenadasStr, numLines, numColumns))
-            {
-                val listaSeparada = coordenadasStr.split(",")
-                return Pair(listaSeparada[0].toInt() - 1, converteLetraNumero(coordenadasStr))
-            }
-        }
-        else
-        {
-            textoCoordenadasInvalidas()
-            return null
-        }
-    return null
-}
-
+//=========================================Validar Arvore Ajacente ======================
 fun verificarHorizontal(terreno: Array<Array<String?>>, coords: Pair<Int, Int>, letra : String): Boolean
 {
     val numColuna = terreno[0].size
@@ -613,10 +574,13 @@ fun verificarVertical(terreno: Array<Array<String?>>, coords: Pair<Int, Int>): B
             horizontal = verificarHorizontal(terreno,coords,"A")
             cima = terreno[linha - 1][coluna] == "A"
         }
-        else if(linha < numLinha)
+        if(linha < numLinha)
         {
             horizontal = verificarHorizontal(terreno,coords,"A")
-            baixo = terreno[linha + 1][coluna] == "A"
+            if(linha < numLinha-1)
+            {
+                baixo = terreno[linha + 1][coluna] == "A"
+            }
         }
     }
     if(cima || baixo || horizontal)
@@ -635,6 +599,8 @@ fun temArvoreAdjacente(terreno: Array<Array<String?>>, coords: Pair<Int, Int>): 
     return false
 }
 
+//============================= Validar Tenda Adjacente =======================================
+//Função de computação gráfica - Obra de arte :)
 fun temTendaAdjacente(terreno: Array<Array<String?>>, coords: Pair<Int, Int>): Boolean
 {
     for (linha in coords.first - 1 until coords.first + 2)
@@ -645,9 +611,12 @@ fun temTendaAdjacente(terreno: Array<Array<String?>>, coords: Pair<Int, Int>): B
             {
                 if (coluna >= 0 && coluna < terreno[0].size)
                 {
-                    if (terreno[linha][coluna] == "T")
+                    if (linha != coords.first || coluna != coords.second)
                     {
-                        return true
+                        if (terreno[linha][coluna] == "T")
+                        {
+                            return true
+                        }
                     }
                 }
             }
@@ -656,32 +625,37 @@ fun temTendaAdjacente(terreno: Array<Array<String?>>, coords: Pair<Int, Int>): B
     return false
 }
 
+//=============================== Tendas ================================
+
+//Função Obrigatoria - Conta as tendas pela coluna(vertical)
 fun contaTendasColuna(terreno: Array<Array<String?>>, coluna: Int): Int
 {
+    var contador = 0
     for(linha in terreno.indices)
     {
-        for(colunas in 0 until terreno[0].size)
+        if(terreno[linha][coluna].equals("T"))
         {
-            if(terreno[linha][coluna] == "T")
-            {
-                return 1
-            }
-        }
-    }
-    return 0
-}
-
-fun contaTendasLinha(terreno: Array<Array<String?>>, linha: Int): Int
-{
-    var contador = 0
-    for (coluna in 0 until terreno[0].size) {
-        if (terreno[linha][coluna].equals("T")) {
             contador++
         }
     }
     return contador
 }
 
+//Função Obrigatoria - Conta as tendas pela linha(horizontal)
+fun contaTendasLinha(terreno: Array<Array<String?>>, linha: Int): Int
+{
+    var contador = 0
+    for (coluna in 0 until terreno[0].size)
+    {
+        if (terreno[linha][coluna].equals("T"))
+        {
+            contador++
+        }
+    }
+    return contador
+}
+
+//Função obrigatoria - Verifica se é possivel colocar tenda naquela coordenada
 fun colocaTenda(terreno: Array<Array<String?>>, coords: Pair<Int,Int>): Boolean
 {
     if(coords.first < 0 || coords.first > terreno.size - 1 ||
@@ -689,92 +663,186 @@ fun colocaTenda(terreno: Array<Array<String?>>, coords: Pair<Int,Int>): Boolean
     {
         return false
     }
-    else if(!temArvoreAdjacente(terreno,coords))
+    if (terreno[coords.first][coords.second]== "A")
     {
         return false
     }
+    if(!temArvoreAdjacente(terreno,coords))
+    {
+        return false
+    }
+    if(temTendaAdjacente(terreno,coords))
+    {
+        return false
+    }
+    if(terreno[coords.first][coords.second] == "T")
+    {
+        terreno[coords.first][coords.second] = null
+    }
+    else
+    {
         terreno[coords.first][coords.second] = "T"
-        return true
+    }
+    return true
 }
 
-fun main() {
-    var linha: Int = -1
-    var coluna: Int = -1
-    var data: String?
-    var opcao: Int?
-    var validaTerreno: Boolean
-    var validacaoData: String? = null
-    do {
-        validaTerreno = true
-        opcao = pedirInteiro()
-        if (opcao == 1) {
-            data = ""
-            validacaoData = null
-            linha = inputLinhasOuColunas("linhas")
-            coluna = inputLinhasOuColunas("colunas")
-            validaTerreno = validaTamanhoMapa(linha, coluna)
-            if (linha == 10 && coluna == 10) {
-                do {
-                    data = pedirDataNascimento()
-                    validacaoData = validaDataNascimento(data)
-                } while (validacaoData == "Data invalida")
-            }
-        }
-    } while (!validaOpcao(opcao) || !validaTerreno || validacaoData == "Menor de idade nao pode jogar")
-}
-    /*val contadoresVerticais = leContadoresDoFicheiro(linha, coluna, true)
-    val contadoresHorizontais = leContadoresDoFicheiro(linha, coluna, false)
-    val terreno = leTerrenoDoFicheiro(linha, coluna)
-    print(criaTerreno(terreno,contadoresVerticais, contadoresHorizontais,true, true))*/
-
-fun terminouJogo(
-    terreno: Array<Array<String?>>, contadoresVerticais: Array<Int?>,
-    contadoresHorizontais: Array<Int?>): Boolean
+//================================ Terminou o jogo==========================
+fun terminouJogo(terreno: Array<Array<String?>>, contadoresVerticais: Array<Int?>,
+                 contadoresHorizontais: Array<Int?>): Boolean
 {
-    val contadorL = 0
-    var contadorC = 0
-    val numLinhas = terreno.size
-    var incremente = 0
-    var validacaoVertical  = false
-    var validacaoHorizontal = false
-    for(linha in 0 until numLinhas)
+    val somaHorizontais : Array<Int?> = Array(contadoresHorizontais.size) {0}
+    val somaVerticais : Array<Int?> = Array(contadoresVerticais.size) {0}
+    for(linha in 0 until terreno.size)
     {
-        if(incremente < terreno[0].size)
+        somaHorizontais[linha] = contaTendasLinha(terreno,linha)
+        if (somaHorizontais[linha] == 0)
         {
-            if(terreno[linha][incremente++] == "A")
-            {
-                contadorC++
-            }
-        }
-        if(contadorC == contadoresHorizontais[linha])
-        {
-            validacaoHorizontal = true
+            somaHorizontais[linha] = null
         }
     }
-    /*for(coluna in 0 until terreno[0].size)
+    for(coluna in 0 until terreno[0].size)
     {
-        print(terreno[linha][coluna]+ "   ")
-        if (terreno[linha][coluna] == "A")
+        somaVerticais[coluna] = contaTendasColuna(terreno,coluna)
+        if (somaVerticais[coluna] == 0)
         {
-            contadorL++
-        }
-    }*/
-    for(i in 0 until contadoresVerticais.size)
-    {
-        if(contadorL == contadoresVerticais[i])
-        {
-            validacaoVertical = true
+            somaVerticais[coluna] = null
         }
     }
-    for(i in 0 until contadoresHorizontais.size)
+    if(somaVerticais contentEquals contadoresVerticais && somaHorizontais contentEquals contadoresHorizontais)
     {
-
-    }
-    println("Contador coluna: $contadorC")
-    println("Contador linha: $contadorL")
-    if(validacaoVertical && validacaoHorizontal)
-    {
+        fimDoJogo()
         return true
     }
     return false
+}
+
+//Função Opcional - Texto do terminou o jogo
+fun fimDoJogo()
+{
+    println("Parabens! Terminou o jogo!")
+}
+
+//==========================================Criar o terreno =====================================
+/*Função Opcional - Converte o Array dos contadores verticais para a String
+Objetivo: contadoresVerticais Array para o criaTerreno (legenda Vertical mais a esquerda)
+ */
+fun transformarArrayIntEmString(terreno: Array<Array<String?>>, contadoresVerticais: Array<Int?>?) : String
+{
+    val valores : Array<Int?>? = contadoresVerticais
+    var texto = ""
+
+    if (valores != null) {
+        for(i in 0 until valores.size)
+        {
+            if(valores[i]== null)
+            {
+                texto += "    "
+            } else {
+                texto += "   ${valores[i]}"
+            }
+        }
+    }
+    return texto
+}
+
+//Função Opcional - Traduz o "A" no triângulo e o null em espaço vazio
+fun tradutorTerreno(terreno: Array<Array<String?>>, numLines: Int, numColumns: Int): String?
+{
+    var texto = ""
+    if(terreno[numLines][numColumns] == "A")
+    {
+        texto += "\u25B3"
+    }
+    if(terreno[numLines][numColumns] == "T")
+    {
+        texto += "T"
+    }
+    if(terreno[numLines][numColumns] == null)
+    {
+        texto += " "
+    }
+    return texto
+}
+
+/*Função Obrigatoria - Cria o terreno do jogo
+Também é a função mais complexa ehehehe (além de dificil)
+ */
+fun criaTerreno(terreno: Array<Array<String?>>,
+                contadoresVerticais: Array<Int?>?,
+                contadoresHorizontais: Array<Int?>?,
+                mostraLegendaHorizontal: Boolean = true,
+                mostraLegendaVertical: Boolean = true): String {
+    val numColunas = terreno[0].size
+    val numLinhas = terreno.size
+    var terrenoFinal = ""
+
+    //Mostra os contadores Verticais(Topo do terreno)
+    if (contadoresVerticais != null)
+    {
+        terrenoFinal += ("    ${transformarArrayIntEmString(terreno, contadoresVerticais)}\n")
+    }
+
+    //Mostra a legenda Horizontal(A | B | C...)
+    if (mostraLegendaHorizontal)
+    {
+        terrenoFinal += ("     | ${criaLegendaHorizontal(numColunas)}\n")
+    }
+
+    for (i in 0 until numLinhas)
+    {
+        //Mostra os contadores das linhas(Lado do terreno)
+        if (contadoresHorizontais != null)
+        {
+            terrenoFinal += "${criaLegendaContadoresHorizontal(arrayOf(contadoresHorizontais[i]))}"
+        }
+        else
+        {
+            terrenoFinal += " "
+        }
+        //Mostra os numeros da lateral esquerda
+        if (mostraLegendaVertical)
+        {
+            terrenoFinal += " ${criaLegendaVertical(true, i + 1)}"
+        }
+        else
+        {
+            terrenoFinal += "   "
+        }
+        //Inicio do desenho do mapa em si
+        for (j in 0 until numColunas)
+        {
+            terrenoFinal += " | ${tradutorTerreno(terreno, i, j)}"
+            if (j == numColunas - 1 && i != numLinhas -1)
+            {
+                terrenoFinal += "\n"
+            }
+        }
+    }
+    return terrenoFinal
+}
+
+//Função Obrigatoria - Cria a legenda dos contadores Horizontais
+fun criaLegendaContadoresHorizontal(contadoresVerticais: Array<Int?>): String
+{
+    var texto = ""
+    for(i in contadoresVerticais.indices)
+    {
+        if(contadoresVerticais[i] == null)
+        {
+            texto += (" ")
+        }
+        else if(contadoresVerticais[i] == 0)
+        {
+            texto += (" ")
+        }
+        else
+        {
+            texto += "%${1}s".format(contadoresVerticais[i])
+        }
+        if (i != contadoresVerticais.size - 1)
+        {
+            texto += "   "
+        }
+    }
+    return texto
 }
